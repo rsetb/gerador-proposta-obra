@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Proposal, AreaItem, AdditionalItem } from "../types";
-import { Trash2, Plus, Users, Landmark, Maximize, ShoppingBag, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
+import { Trash2, Plus, Users, Landmark, Maximize, ShoppingBag, ClipboardList, ChevronDown, ChevronUp, Palette, Upload, Image } from "lucide-react";
 import { formatCurrency, calculateAreaM2, calculateAreaSubtotal, calculateAdditionalSubtotal } from "../utils";
 
 interface ProposalFormProps {
@@ -10,6 +10,54 @@ interface ProposalFormProps {
 
 export default function ProposalForm({ proposal, onChange }: ProposalFormProps) {
   const [showProfData, setShowProfData] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      processFile(file);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      processFile(file);
+    }
+  };
+
+  const processFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      alert("Por favor, envie apenas arquivos de imagem (PNG, JPG, JPEG, SVG, etc).");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        updateProfessional({ logo: event.target.result as string });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLogo = () => {
+    updateProfessional({ logo: null });
+  };
 
   // Helper to update specific sub-state
   const updateClient = (fields: Partial<Proposal["client"]>) => {
@@ -239,6 +287,151 @@ export default function ProposalForm({ proposal, onChange }: ProposalFormProps) 
             </div>
           </div>
         )}
+      </section>
+
+      {/* SEÇÃO: IDENTIDADE VISUAL & TEMA */}
+      <section className="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 md:p-8 space-y-6">
+        <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+          <div className="p-2.5 bg-amber-500/10 text-amber-600 rounded-xl">
+            <Palette className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900">Identidade Visual & Tema</h2>
+            <p className="text-sm text-slate-500">Escolha o estilo de design e adicione o logotipo da sua empresa</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Seleção do Tema */}
+          <div className="lg:col-span-7 space-y-4">
+            <label className="text-sm font-semibold text-slate-700 block">Estilo & Cores do Orçamento</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Tema Padrão */}
+              <button
+                type="button"
+                onClick={() => onChange({ ...proposal, theme: "default" })}
+                className={`text-left p-4 rounded-xl border transition-all relative ${
+                  proposal.theme === "default" || !proposal.theme
+                    ? "border-indigo-600 bg-indigo-50/20 ring-2 ring-indigo-600/10"
+                    : "border-slate-200 hover:border-slate-300 bg-white"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-sm text-slate-900">Corporativo Azul</span>
+                  <div className="flex gap-1">
+                    <span className="w-3.5 h-3.5 rounded-full bg-indigo-600"></span>
+                    <span className="w-3.5 h-3.5 rounded-full bg-slate-100 border"></span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 leading-normal">
+                  Design limpo, neutro e altamente profissional para qualquer tipo de obra ou reforma.
+                </p>
+              </button>
+
+              {/* Tema Arte em Ferro (D'Ponte) */}
+              <button
+                type="button"
+                onClick={() => onChange({ ...proposal, theme: "arte-em-ferro" })}
+                className={`text-left p-4 rounded-xl border transition-all relative ${
+                  proposal.theme === "arte-em-ferro"
+                    ? "border-amber-600 bg-amber-50/10 ring-2 ring-amber-600/10"
+                    : "border-slate-200 hover:border-slate-300 bg-white"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-sm text-slate-900">D'Ponte (Arte em Ferro)</span>
+                  <div className="flex gap-1">
+                    <span className="w-3.5 h-3.5 rounded-full bg-amber-700"></span>
+                    <span className="w-3.5 h-3.5 rounded-full bg-stone-900"></span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 leading-normal">
+                  Estilo rústico, forte e elegante de serralheria artística, detalhes em bronze, cinza escuro e serifas.
+                </p>
+              </button>
+
+              {/* Tema Pintura Eletrostática (DPONT) */}
+              <button
+                type="button"
+                onClick={() => onChange({ ...proposal, theme: "pintura-eletrostatica" })}
+                className={`text-left p-4 rounded-xl border transition-all relative ${
+                  proposal.theme === "pintura-eletrostatica"
+                    ? "border-yellow-500 bg-yellow-50/10 ring-2 ring-yellow-500/10"
+                    : "border-slate-200 hover:border-slate-300 bg-white"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-sm text-slate-900">DPONT (Pintura)</span>
+                  <div className="flex gap-1">
+                    <span className="w-3.5 h-3.5 rounded-full bg-yellow-500"></span>
+                    <span className="w-3.5 h-3.5 rounded-full bg-slate-900"></span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 leading-normal">
+                  Visual arrojado, moderno e técnico. Combinação de preto industrial e respingo amarelo.
+                </p>
+              </button>
+            </div>
+          </div>
+
+          {/* Upload de Logotipo */}
+          <div className="lg:col-span-5 space-y-3">
+            <label className="text-sm font-semibold text-slate-700 block">Logotipo da Empresa</label>
+            
+            {proposal.professional.logo ? (
+              <div className="flex items-center gap-4 p-4 border border-slate-200 rounded-xl bg-slate-50/50">
+                <div className="relative w-16 h-16 bg-white border rounded-lg overflow-hidden flex items-center justify-center p-1 shadow-xs">
+                  <img
+                    src={proposal.professional.logo}
+                    alt="Logo Empresa"
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-slate-700 truncate">Logotipo carregado</p>
+                  <p className="text-[10px] text-slate-400">Usando arquivo personalizado</p>
+                  <button
+                    type="button"
+                    onClick={handleRemoveLogo}
+                    className="text-xs font-bold text-rose-600 hover:text-rose-800 mt-1 cursor-pointer block"
+                  >
+                    Excluir Logotipo
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div
+                onDragEnter={handleDrag}
+                onDragOver={handleDrag}
+                onDragLeave={handleDrag}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+                  dragActive
+                    ? "border-indigo-500 bg-indigo-50/30"
+                    : "border-slate-300 hover:border-indigo-400 bg-slate-50/30 hover:bg-white"
+                }`}
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                <p className="text-xs font-bold text-slate-700">Arraste seu logo aqui ou clique para buscar</p>
+                <p className="text-[10px] text-slate-400 mt-1">Formatos suportados: PNG, JPG, JPEG, SVG (Máx 2MB)</p>
+                
+                {/* Visual indicator of the dynamic theme logo that will be used if empty */}
+                <p className="text-[10px] text-amber-600 font-semibold mt-2.5">
+                  {(proposal.theme === "arte-em-ferro" || !proposal.theme) && "📌 Ativo: Usando logo vetorizado D'PONTE de fábrica"}
+                  {proposal.theme === "pintura-eletrostatica" && "📌 Ativo: Usando logo vetorizado DPONT de fábrica"}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       </section>
 
       {/* 3. MEDIDAS (ÁREAS) DA OBRA */}

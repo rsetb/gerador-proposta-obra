@@ -27,9 +27,12 @@ export interface ProfessionalData {
   email: string;
   document: string; // CNPJ or CPF
   companyName: string;
+  logo?: string | null; // Base64 or URL
 }
 
 export interface Proposal {
+  id?: string;
+  title?: string;
   client: ClientData;
   professional: ProfessionalData;
   areas: AreaItem[];
@@ -38,4 +41,5 @@ export interface Proposal {
   validity: string;
   paymentTerms: string;
   deadline: string;
+  theme?: "default" | "arte-em-ferro" | "pintura-eletrostatica";
 }
