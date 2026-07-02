@@ -1,0 +1,6 @@
+{
+  "name": "Gerador de Propostas de Obras",
+  "description": "Gerador de propostas comerciais de obras e reformas com cálculo automático de áreas, itens adicionais, pré-visualização e exportação para PDF.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
